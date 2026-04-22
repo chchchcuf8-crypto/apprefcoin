@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: Arial;
+            text-align: center;
+        }
+        button {
+            padding: 10px;
+            margin: 10px;
+            border: none;
+            border-radius: 10px;
+            background: #22c55e;
+            color: white;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>💰 refCoin App</h1>
+
+<p id="user"></p>
+<p id="coins">Баланс: 0</p>
+
+<button onclick="earn()">Заработать +1</button>
+<button onclick="buyTop()">Стать #1</button>
+
+<h2>🏆 Рейтинг</h2>
+<div id="rating"></div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    let user = tg.initDataUnsafe.user;
+
+    document.getElementById("user").innerText =
+        "@" + (user.username || user.id);
+
+    let coins = 0;
+
+    function earn() {
+        coins++;
+        update();
+    }
+
+    function buyTop() {
+        if (coins >= 10) {
+            coins -= 10;
+            alert("Ты теперь #1 🔥");
+        } else {
+            alert("Недостаточно монет");
+        }
+        update();
+    }
+
+    function update() {
+        document.getElementById("coins").innerText =
+            "Баланс: " + coins;
+    }
+
+    // пример рейтинга
+    document.getElementById("rating").innerHTML = `
+        1. Ты 🔥<br>
+        2. Игрок<br>
+        3. Игрок
+    `;
+</script>
+
+</body>
+</html>
