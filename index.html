@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+body {
+    background: #0f172a;
+    color: white;
+    font-family: Arial;
+    text-align: center;
+}
+
+h1 { margin-top: 10px; }
+
+button {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 10px;
+    border: none;
+    background: #22c55e;
+    color: white;
+    font-size: 16px;
+}
+
+.menu button {
+    background: #334155;
+}
+
+.card {
+    background: #1e293b;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>💰 refCoin App</h1>
+
+<div class="menu">
+    <button onclick="show('main')">🏠 Главная</button>
+    <button onclick="show('rating')">🏆 Рейтинг</button>
+    <button onclick="show('tasks')">💰 Заработать</button>
+</div>
+
+<div id="main">
+    <div class="card">
+        <p id="user"></p>
+        <p id="coins"></p>
+        <p id="rank"></p>
+
+        <input id="link" placeholder="твоя ссылка (tg)" />
+        <button onclick="saveLink()">Сохранить ссылку</button>
+
+        <button onclick="buyTop()">🔥 Стать #1 (10 refCoin)</button>
+    </div>
+</div>
+
+<div id="rating" style="display:none">
+    <div class="card">
+        <h2>🏆 Топ игроков</h2>
+        <div id="ratingList"></div>
+    </div>
+</div>
+
+<div id="tasks" style="display:none">
+    <div class="card">
+        <h2>💰 Задания</h2>
+
+        <p>Подпишись и получи 1 refCoin</p>
+        <button onclick="openChannel()">Перейти</button>
+        <button onclick="checkSub()">Проверить</button>
+    </div>
+</div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.expand();
+
+let user = tg.initDataUnsafe.user;
+let userId = user.id;
+
+const API = "http://127.0.0.1:8000"; // потом заменим
+
+document.getElementById("user").innerText =
+    "@" + (user.username || user.id);
+
+// переключение экранов
+function show(screen) {
+    document.getElementById("main").style.display = "none";
+    document.getElementById("rating").style.display = "none";
+    document.getElementById("tasks").style.display = "none";
+
+    document.getElementById(screen).style.display = "block";
+}
+
+// загрузка данных
+async function loadUser() {
+    let res = await fetch(API + "/user/" + userId);
+    let data = await res.json();
+
+    document.getElementById("coins").innerText = "💰 " + data[0];
+    document.getElementById("rank").innerText = "🏆 #" + data[1];
+    document.getElementById("link").value = data[2];
+}
+
+// сохранить ссылку
+async function saveLink() {
+    let link = document.getElementById("link").value;
+
+    await fetch(API + "/set_link/" + userId, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({link})
+    });
+
+    alert("Сохранено");
+}
+
+// купить топ
+async function buyTop() {
+    let res = await fetch(API + "/buy_top/" + userId, {method: "POST"});
+    let data = await res.json();
+
+    if (data.error) alert("Не хватает монет");
+    else alert("Ты #1 🔥");
+
+    loadUser();
+    loadRating();
+}
+
+// рейтинг
+async function loadRating() {
+    let res = await fetch(API + "/rating");
+    let data = await res.json();
+
+    let html = "";
+    data.forEach((u, i) => {
+        html += `${i+1}. ${u[1] || "без ссылки"}<br>`;
+    });
+
+    document.getElementById("ratingList").innerHTML = html;
+}
+
+// задания
+function openChannel() {
+    window.open("https://t.me/refcoinXchannel");
+}
+
+async function checkSub() {
+    // временно просто даём монету
+    await fetch(API + "/earn/" + userId, {method: "POST"});
+    alert("+1 refCoin");
+    loadUser();
+}
+
+loadUser();
+loadRating();
+</script>
+
+</body>
+</html>
